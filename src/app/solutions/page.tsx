@@ -1,6 +1,10 @@
 import { getSolutions, getProducts } from "@/lib/wordpress";
+import type { Solution, Product } from "@/types/wordpress";
 import Link from "next/link";
 import Image from "next/image";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "Solutions",
@@ -8,13 +12,20 @@ export const metadata = {
 };
 
 export default async function SolutionsPage() {
-  const [solutionsRes, productsRes] = await Promise.all([
-    getSolutions(),
-    getProducts({ per_page: 100 }),
-  ]);
-
-  const solutions = solutionsRes.data || [];
-  const products = productsRes.data || [];
+  // Fetch data with error handling
+  let solutions: Solution[] = [];
+  let products: Product[] = [];
+  
+  try {
+    const [solutionsRes, productsRes] = await Promise.all([
+      getSolutions(),
+      getProducts({ per_page: 100 }),
+    ]);
+    solutions = solutionsRes.data || [];
+    products = productsRes.data || [];
+  } catch (error) {
+    console.log('API not available, showing placeholder content');
+  }
 
   // Solution icons mapping
   const iconMap: Record<string, React.ReactNode> = {

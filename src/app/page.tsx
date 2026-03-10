@@ -2,20 +2,31 @@ import { HeroBanner } from "@/components/home/HeroBanner";
 import { Stats } from "@/components/home/Stats";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getProducts, getSiteOptions, getSolutions } from "@/lib/wordpress";
+import type { Product, SiteOptions, Solution } from "@/types/wordpress";
 import Link from "next/link";
 import Image from "next/image";
 
-export default async function HomePage() {
-  // Fetch data
-  const [productsRes, optionsRes, solutionsRes] = await Promise.all([
-    getProducts({ per_page: 6 }),
-    getSiteOptions(),
-    getSolutions(),
-  ]);
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
-  const products = productsRes.data || [];
-  const options = optionsRes.data;
-  const solutions = solutionsRes.data || [];
+export default async function HomePage() {
+  // Fetch data with error handling
+  let products: Product[] = [];
+  let options: SiteOptions | null = null;
+  let solutions: Solution[] = [];
+  
+  try {
+    const [productsRes, optionsRes, solutionsRes] = await Promise.all([
+      getProducts({ per_page: 6 }),
+      getSiteOptions(),
+      getSolutions(),
+    ]);
+    products = productsRes.data || [];
+    options = optionsRes.data;
+    solutions = solutionsRes.data || [];
+  } catch (error) {
+    console.log('API not available, showing placeholder content');
+  }
 
   return (
     <>

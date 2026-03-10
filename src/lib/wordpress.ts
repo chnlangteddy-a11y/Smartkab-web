@@ -2,111 +2,17 @@
  * WordPress REST API Client
  */
 
+import type { 
+  WPResponse, 
+  Product, 
+  Solution, 
+  CaseStudy, 
+  MenuItem, 
+  SiteOptions, 
+  BlogPost 
+} from '@/types/wordpress';
+
 const WP_API_URL = process.env.NEXT_PUBLIC_WP_API_URL || 'https://your-wordpress-site.com/wp-json';
-
-interface WPResponse<T> {
-  success: boolean;
-  data: T;
-  total?: number;
-  total_pages?: number;
-  page?: number;
-  message?: string;
-}
-
-// Types
-export interface Product {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  thumbnail: string | null;
-  thumbnail_large: string | null;
-  gallery: string[];
-  model: string;
-  specifications: { name: string; value: string }[];
-  features: { title: string; description: string; icon: string }[];
-  applications: string[];
-  categories: string[];
-  pdf: string | null;
-  related_products?: number[];
-}
-
-export interface Solution {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  thumbnail: string | null;
-  icon: string;
-}
-
-export interface CaseStudy {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  thumbnail: string | null;
-  location: string;
-  capacity: string;
-  year: number;
-  products_used: number[];
-}
-
-export interface MenuItem {
-  id: number;
-  title: string;
-  url: string;
-  slug: string;
-  parent: string;
-  order: number;
-  target: string;
-  children: MenuItem[];
-}
-
-export interface SiteOptions {
-  site_name: string;
-  site_desc: string;
-  logo: string | null;
-  hero_banners: {
-    image: string;
-    title: string;
-    subtitle: string;
-    link: string;
-    button_text: string;
-  }[];
-  company_info: {
-    address: string;
-    phone: string;
-    email: string;
-    social: {
-      linkedin: string;
-      twitter: string;
-      facebook: string;
-    };
-  };
-  stats: { number: string; label: string }[];
-  certifications: string[];
-}
-
-export interface BlogPost {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  date: string;
-  featured_image: {
-    thumbnail: string;
-    medium: string;
-    large: string;
-    full: string;
-  } | null;
-  author: string;
-  categories: string[];
-}
 
 // API Functions
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -126,7 +32,8 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return data as T;
 }
 
 // Products
@@ -143,7 +50,7 @@ export async function getProducts(params: {
   if (params.search) searchParams.set('search', params.search);
 
   const query = searchParams.toString();
-  return fetchAPI<WPResponse<Product[]>('/smartkab/v1/products' + (query ? `?${query}` : ''));
+  return fetchAPI<WPResponse<Product[]>>('/smartkab/v1/products' + (query ? `?${query}` : ''));
 }
 
 export async function getProductBySlug(slug: string): Promise<WPResponse<Product>> {
@@ -216,8 +123,8 @@ function formatPost(post: Record<string, unknown>): BlogPost {
       month: 'long',
       day: 'numeric',
     }),
-    featured_image: post.featured_image || null,
-    author: post.author_name || 'Admin',
-    categories: post.categories_names || [],
+    featured_image: post.featured_image ? (post.featured_image as BlogPost['featured_image']) : null,
+    author: (post.author_name as string) || 'Admin',
+    categories: (post.categories_names as string[]) || [],
   };
 }

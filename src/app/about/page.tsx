@@ -1,6 +1,10 @@
 import { getSiteOptions, getCaseStudies } from "@/lib/wordpress";
+import type { SiteOptions, CaseStudy } from "@/types/wordpress";
 import Image from "next/image";
 import Link from "next/link";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "About Us",
@@ -8,13 +12,19 @@ export const metadata = {
 };
 
 export default async function AboutPage() {
-  const [optionsRes, casesRes] = await Promise.all([
-    getSiteOptions(),
-    getCaseStudies(),
-  ]);
-
-  const options = optionsRes.data;
-  const caseStudies = casesRes.data || [];
+  let options: SiteOptions | null = null;
+  let caseStudies: CaseStudy[] = [];
+  
+  try {
+    const [optionsRes, casesRes] = await Promise.all([
+      getSiteOptions(),
+      getCaseStudies(),
+    ]);
+    options = optionsRes.data;
+    caseStudies = casesRes.data || [];
+  } catch (error) {
+    console.log('API not available, showing placeholder content');
+  }
 
   return (
     <>

@@ -4,12 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-// Generate static params for all products
+// Force dynamic rendering - pages will be generated on demand
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
+// Generate static params for all products (optional, for ISR)
 export async function generateStaticParams() {
-  const productsRes = await getProducts({ per_page: 100 });
-  return productsRes.data.map((product) => ({
-    slug: product.slug,
-  }));
+  try {
+    const productsRes = await getProducts({ per_page: 100 });
+    if (productsRes.success && productsRes.data) {
+      return productsRes.data.map((product) => ({
+        slug: product.slug,
+      }));
+    }
+  } catch (error) {
+    console.log('Skipping static generation - API not available');
+  }
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

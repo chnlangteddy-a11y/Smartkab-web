@@ -1,7 +1,11 @@
 import { getProducts } from "@/lib/wordpress";
 import { ProductCard } from "@/components/products/ProductCard";
+import type { Product } from "@/types/wordpress";
 import Link from "next/link";
 import { Suspense } from "react";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "Products",
@@ -17,14 +21,20 @@ export default async function ProductsPage({
   const currentPage = parseInt(params.page || "1");
   const category = params.category;
 
-  const productsRes = await getProducts({
-    page: currentPage,
-    per_page: 12,
-    category,
-  });
-
-  const products = productsRes.data || [];
-  const totalPages = productsRes.total_pages || 1;
+  let products: Product[] = [];
+  let totalPages = 1;
+  
+  try {
+    const productsRes = await getProducts({
+      page: currentPage,
+      per_page: 12,
+      category,
+    });
+    products = productsRes.data || [];
+    totalPages = productsRes.total_pages || 1;
+  } catch (error) {
+    console.log('API not available, showing placeholder content');
+  }
 
   // Category options
   const categories = [

@@ -1,7 +1,10 @@
-import { getPosts, getPostBySlug } from "@/lib/wordpress";
+import { getPosts } from "@/lib/wordpress";
+import type { BlogPost } from "@/types/wordpress";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "News & Insights",
@@ -16,10 +19,21 @@ export default async function NewsPage({
   const params = await searchParams;
   const currentPage = parseInt(params.page || "1");
 
-  const { posts, total, totalPages } = await getPosts({
-    page: currentPage,
-    per_page: 9,
-  });
+  let posts: BlogPost[] = [];
+  let total = 0;
+  let totalPages = 1;
+  
+  try {
+    const result = await getPosts({
+      page: currentPage,
+      per_page: 9,
+    });
+    posts = result.posts;
+    total = result.total;
+    totalPages = result.totalPages;
+  } catch (error) {
+    console.log('API not available, showing placeholder content');
+  }
 
   return (
     <>
